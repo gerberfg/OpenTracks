@@ -20,8 +20,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.util.Log;
@@ -58,19 +56,19 @@ public abstract class BluetoothConnectionManager<DataType> {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             switch (newState) {
                 case BluetoothProfile.STATE_CONNECTING:
-                    Log.d(TAG, "Connecting to sensor: " + gatt.getDevice());
+                    Log.e(TAG, "Connecting to sensor: " + gatt.getDevice());
                     break;
                 case BluetoothProfile.STATE_CONNECTED:
-                    Log.d(TAG, "Connected to sensor: " + gatt.getDevice());
+                    Log.e(TAG, "Connected to sensor: " + gatt.getDevice());
 
                     gatt.discoverServices();
                     break;
                 case BluetoothProfile.STATE_DISCONNECTING:
-                    Log.d(TAG, "Disconnecting from sensor: " + gatt.getDevice());
+                    Log.e(TAG, "Disconnecting from sensor: " + gatt.getDevice());
                     break;
 
                 case BluetoothProfile.STATE_DISCONNECTED:
-                    Log.d(TAG, "Disconnected from sensor: " + gatt.getDevice());
+                    Log.e(TAG, "Disconnected from sensor: " + gatt.getDevice());
 
                     clearData();
                     break;
@@ -79,38 +77,22 @@ public abstract class BluetoothConnectionManager<DataType> {
 
         @Override
         public void onServicesDiscovered(@NonNull BluetoothGatt gatt, int status) {
-            BluetoothGattService service = gatt.getService(serviceUUUID);
-            if (service == null) {
-                Log.e(TAG, "Could not get service for address=" + gatt.getDevice().getAddress() + " serviceUUID=" + serviceUUUID);
-                return;
-            }
-
-            BluetoothGattCharacteristic characteristic = service.getCharacteristic(measurementUUID);
-            if (characteristic == null) {
-                Log.e(TAG, "Could not get BluetoothCharacteristic for address=" + gatt.getDevice().getAddress() + " serviceUUID=" + serviceUUUID + " characteristicUUID=" + measurementUUID);
-                return;
-            }
-            gatt.setCharacteristicNotification(characteristic, true);
-
-            // Register for updates.
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(BluetoothUtils.CLIENT_CHARACTERISTIC_CONFIG_UUID);
-            if (descriptor == null) {
-                Log.e(TAG, "CLIENT_CHARACTERISTIC_CONFIG_UUID characteristic not available; cannot request notifications for changed data.");
-                return;
-            }
-
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-            gatt.writeDescriptor(descriptor);
-
+            BluetoothUtils.subscribe(gatt, BluetoothUtils.BATTERY_SERVICE_UUID, BluetoothUtils.BATTERY_MEASUREMENT_CHAR_UUID);
+            BluetoothUtils.subscribe(gatt, serviceUUUID, measurementUUID);
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, @NonNull BluetoothGattCharacteristic characteristic) {
             Log.d(TAG, "Received data from " + gatt.getDevice().getAddress());
-            SensorData<DataType> sensorData = parsePayload(gatt.getDevice().getName(), gatt.getDevice().getAddress(), characteristic);
-            if (sensorData != null) {
-                Log.d(TAG, "Decoded data from " + gatt.getDevice().getAddress() + ": " + sensorData);
-                observer.onChanged(sensorData);
+            if (BluetoothUtils.BATTERY_SERVICE_UUID.equals(characteristic.getService().getUuid())) {
+                final Integer batteryLevel = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                Log.d(TAG, "Battery level of " + gatt.getDevice().getAddress() + ": " + batteryLevel);
+            } else {
+                SensorData<DataType> sensorData = parsePayload(gatt.getDevice().getName(), gatt.getDevice().getAddress(), characteristic);
+                if (sensorData != null) {
+                    Log.d(TAG, "Decoded data from " + gatt.getDevice().getAddress() + ": " + sensorData);
+                    observer.onChanged(sensorData);
+                }
             }
         }
     };

@@ -16,7 +16,10 @@
 package de.dennisguse.opentracks.sensors;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.util.Log;
@@ -42,6 +45,9 @@ import de.dennisguse.opentracks.sensors.sensorData.SensorDataRunning;
 public class BluetoothUtils {
 
     public static final UUID CLIENT_CHARACTERISTIC_CONFIG_UUID = new UUID(0x290200001000L, 0x800000805f9b34fbL);
+
+    public static final UUID BATTERY_SERVICE_UUID = new UUID(0x180F00001000L, 0x800000805f9b34fbL);
+    public static final UUID BATTERY_MEASUREMENT_CHAR_UUID = new UUID(0x2A1900001000L, 0x800000805f9b34fbL);
 
     public static final UUID HEART_RATE_SERVICE_UUID = new UUID(0x180D00001000L, 0x800000805f9b34fbL);
     public static final UUID HEART_RATE_MEASUREMENT_CHAR_UUID = new UUID(0x2A3700001000L, 0x800000805f9b34fbL);
@@ -183,5 +189,30 @@ public class BluetoothUtils {
         }
 
         return new SensorDataRunning(address, sensorName, speed, cadence, totalDistance);
+    }
+
+    public static void subscribe(@NonNull BluetoothGatt gatt, UUID serviceUUID, UUID charateristicsUUID) {
+        BluetoothGattService service = gatt.getService(serviceUUID);
+        if (service == null) {
+            Log.e(TAG, "Could not get service for address=" + gatt.getDevice().getAddress() + " serviceUUID=" + serviceUUID);
+            return;
+        }
+
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(charateristicsUUID);
+        if (characteristic == null) {
+            Log.e(TAG, "Could not get BluetoothCharacteristic for address=" + gatt.getDevice().getAddress() + " serviceUUID=" + serviceUUID + " characteristicUUID=" + charateristicsUUID);
+            return;
+        }
+
+        // Register for updates.
+        gatt.setCharacteristicNotification(characteristic, true);
+        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(BluetoothUtils.CLIENT_CHARACTERISTIC_CONFIG_UUID);
+        if (descriptor == null) {
+            Log.e(TAG, "CLIENT_CHARACTERISTIC_CONFIG_UUID characteristic not available; cannot request notifications for changed data.");
+            return;
+        }
+
+        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        gatt.writeDescriptor(descriptor);
     }
 }
