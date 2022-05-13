@@ -30,7 +30,6 @@ import androidx.lifecycle.MutableLiveData;
 
 import java.time.Duration;
 
-import de.dennisguse.opentracks.R;
 import de.dennisguse.opentracks.data.models.Distance;
 import de.dennisguse.opentracks.data.models.Marker;
 import de.dennisguse.opentracks.data.models.Track;
@@ -187,8 +186,8 @@ public class TrackRecordingService extends Service implements TrackPointCreator.
 
     @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
     public void resumeCurrentTrack() {
-        if (!isRecording() || !isPaused()) {
-            Log.w(TAG, "Ignore resumeCurrentTrack. Not recording or not paused.");
+        if (!isRecording()) {
+            Log.w(TAG, "Ignore resumeCurrentTrack. Not recording.");
             return;
         }
 
@@ -222,46 +221,17 @@ public class TrackRecordingService extends Service implements TrackPointCreator.
             return;
         }
 
-        // Need to remember the recordingTrackId before setting it to null
-        boolean wasPause = isPaused();
-        Track.Id trackId = recordingStatus.getTrackId();
-
         // Set recording status
         updateRecordingStatus(STATUS_DEFAULT);
 
-        if (!wasPause) {
-            trackRecordingManager.end(trackPointCreator);
-        }
-
-        endRecording(true);
+        endRecording();
 
         stopSelf();
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
-    public void pauseCurrentTrack() {
-        if (!isRecording() || isPaused()) {
-            Log.w(TAG, "Ignore pauseCurrentTrack. Not recording or paused.");
-            return;
-        }
-
-        // Set recording status
-        updateRecordingStatus(recordingStatus.pause());
-
-        trackRecordingManager.pause(trackPointCreator);
-
-        endRecording(false);
-
-        notificationManager.updateContent(getString(R.string.generic_paused));
-    }
-
-    private void endRecording(boolean trackStopped) {
+    private void endRecording() {
         stopUpdateRecordingData();
-        if (!trackStopped) {
-            updateRecordingDataWhileRecording();
-        } else {
-            recordingDataObservable.postValue(NOT_RECORDING);
-        }
+        recordingDataObservable.postValue(NOT_RECORDING);
 
         voiceAnnouncementManager.stop();
 
@@ -289,8 +259,8 @@ public class TrackRecordingService extends Service implements TrackPointCreator.
 
     @Override
     public boolean newTrackPoint(TrackPoint trackPoint, Distance thresholdHorizontalAccuracy) {
-        if (!isRecording() || isPaused()) {
-            Log.w(TAG, "Ignore newTrackPoint. Not recording or paused.");
+        if (!isRecording()) {
+            Log.w(TAG, "Ignore newTrackPoint. Not recording.");
             return false;
         }
 
@@ -323,7 +293,7 @@ public class TrackRecordingService extends Service implements TrackPointCreator.
     }
 
     public Marker.Id insertMarker(String name, String category, String description, String photoUrl) {
-        if (!isRecording() || isPaused()) {
+        if (!isRecording()) {
             return null;
         }
 
@@ -397,10 +367,5 @@ public class TrackRecordingService extends Service implements TrackPointCreator.
     @Deprecated //TODO Should be @VisibleForTesting
     public boolean isRecording() {
         return recordingStatus.isRecording();
-    }
-
-    @VisibleForTesting
-    public boolean isPaused() {
-        return recordingStatus.isPaused();
     }
 }

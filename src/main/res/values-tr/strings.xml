@@ -117,7 +117,6 @@ limitations under the License.
     <string name="generic_description_line">Açıklama: %1$s</string>
     <string name="generic_name">Adı</string>
     <string name="generic_name_line">Adı: %1$s</string>
-    <string name="generic_paused">Duraklatıldı</string>
     <string name="generic_recording">Kaydediliyor…</string>
     <string name="generic_save">Kaydet</string>
     <string name="generic_tracks">Parkurlar</string>
@@ -129,7 +128,6 @@ limitations under the License.
     <string name="image_arrow">Ok</string>
     <string name="image_marker">İşaretçi</string>
     <string name="image_marker_count">İşaretçi sayısı</string>
-    <string name="image_pause">Duraklat</string>
     <string name="image_photo_marker">Fotoğraf işaretçisi</string>
     <string name="image_record">Kaydet</string>
     <string name="image_stop">Durdur</string>

@@ -97,12 +97,6 @@ class TrackRecordingManager implements SharedPreferences.OnSharedPreferenceChang
         reset();
     }
 
-    void pause(TrackPointCreator trackPointCreator) {
-        insertTrackPoint(trackPointCreator.createSegmentEnd(), true);
-
-        reset();
-    }
-
     void end(TrackPointCreator trackPointCreator) {
         TrackPoint segmentEnd = trackPointCreator.createSegmentEnd();
         insertTrackPoint(segmentEnd, true);

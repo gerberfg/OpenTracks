@@ -163,7 +163,7 @@ public class ExportImportTest {
 
         trackPointCreator.setClock("2020-02-02T02:02:06Z");
         trackPointCreator.setRemoteSensorManager(new BluetoothRemoteSensorManager(context, null, trackPointCreator));
-        service.pauseCurrentTrack();
+        service.endCurrentTrack();
 
         trackPointCreator.setClock("2020-02-02T02:02:20Z");
         service.resumeCurrentTrack();
