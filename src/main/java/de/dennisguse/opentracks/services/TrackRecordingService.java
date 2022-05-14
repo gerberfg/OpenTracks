@@ -184,16 +184,6 @@ public class TrackRecordingService extends Service implements TrackPointCreator.
         startRecording();
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
-    public void resumeCurrentTrack() {
-        if (!isRecording()) {
-            Log.w(TAG, "Ignore resumeCurrentTrack. Not recording.");
-            return;
-        }
-
-        resumeTrack(recordingStatus.getTrackId());
-    }
-
     private void startRecording() {
         // Update instance variables
         handler.postDelayed(updateRecordingData, RECORDING_DATA_UPDATE_INTERVAL.toMillis());

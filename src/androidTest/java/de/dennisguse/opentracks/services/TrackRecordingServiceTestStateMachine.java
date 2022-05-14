@@ -158,7 +158,7 @@ public class TrackRecordingServiceTestStateMachine {
         assertEquals(GpsStatusValue.GPS_ENABLED, service.getGpsStatusObservable().getValue());
 
         // when
-        service.resumeCurrentTrack();
+        service.resumeTrack(trackId);
         Thread.sleep(1000);
 
         // then
@@ -201,7 +201,7 @@ public class TrackRecordingServiceTestStateMachine {
         assertEquals(GpsStatusValue.GPS_NONE, service.getGpsStatusObservable().getValue());
 
         // when
-        service.resumeCurrentTrack();
+        service.resumeTrack(new Track.Id(-1));
         Thread.sleep(1000);
 
         // then
